@@ -201,6 +201,34 @@ def clean_date_lines(text):
             
     return "\n".join(cleaned_lines).strip()
 
+
+def refine_education(text):
+    """
+    Keep only lines that look like an Institute or a Course/Degree.
+    Removes extraneous info like dates, locations, descriptions.
+    """
+    if not text:
+        return text
+        
+    lines = text.split('\n')
+    kept_lines = []
+    
+    # Keywords
+    institute_keywords = ["university", "college", "school", "institute", "academy", "polytechnic"]
+    degree_keywords = ["bachelor", "master", "doctor", "associate", "degree", "b.s", "b.a", "b.sc", "m.s", "m.a", "m.sc", "ph.d", "mba", "b.tech", "m.tech", "diploma"]
+    
+    for line in lines:
+        lower_line = line.lower()
+        
+        # Check if line contains any keyword
+        is_institute = any(kw in lower_line for kw in institute_keywords)
+        is_degree = any(kw in lower_line for kw in degree_keywords)
+        
+        if is_institute or is_degree:
+            kept_lines.append(line)
+            
+    return "\n".join(kept_lines).strip()
+
 def parse_resume(text):
     """
     Main parser function.
@@ -213,6 +241,6 @@ def parse_resume(text):
         "phone": extract_phone(text),
         "skills": extract_skills(text), # Keywords found in WHOLE text (or just skills section if we preferred)
         "summary": sections.get("summary"),
-        "education": clean_date_lines(sections.get("education")),
+        "education": refine_education(sections.get("education")),
         "experience": clean_date_lines(sections.get("experience")),
     }

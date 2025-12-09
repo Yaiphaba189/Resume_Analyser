@@ -50,20 +50,7 @@ export default function ParsedView({ parsedData }) {
              )}
           </div>
 
-          <h5 className="text-zinc-500 text-sm mb-3 mt-6 flex items-center gap-2">
-            <Code className="w-4 h-4" /> Skills
-          </h5>
-          <div className="flex flex-wrap gap-2">
-            {skills && skills.length > 0 ? (
-              skills.map((skill, idx) => (
-                <span key={idx} className="px-3 py-1 rounded-full bg-zinc-800 text-zinc-300 text-sm border border-zinc-700">
-                  {skill}
-                </span>
-              ))
-            ) : (
-              <span className="text-zinc-600 italic">No skills specific detected</span>
-            )}
-          </div>
+
         </div>
       </div>
       
@@ -73,6 +60,18 @@ export default function ParsedView({ parsedData }) {
           <SectionView title="Professional Summary" icon={<User className="w-4 h-4" />}>
             {parsedData.summary}
           </SectionView>
+        )}
+
+        {skills && skills.length > 0 && (
+           <SectionView title="Skills" icon={<Code className="w-4 h-4" />}>
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill, idx) => (
+                  <span key={idx} className="px-3 py-1.5 rounded-lg bg-zinc-900/50 text-zinc-300 text-sm border border-zinc-700/50 hover:bg-zinc-800 transition-colors">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+           </SectionView>
         )}
 
         {parsedData.experience && (
@@ -92,8 +91,11 @@ export default function ParsedView({ parsedData }) {
 }
 
 function SectionView({ title, icon, children }) {
-  // Split the content into lines and filter empty ones
-  const lines = typeof children === 'string' 
+  // Check if children is a string to decide rendering mode
+  const isString = typeof children === 'string';
+
+  // Split only if it's a string
+  const lines = isString
     ? children.split('\n').filter(line => line.trim().length > 0)
     : [];
 
@@ -102,20 +104,24 @@ function SectionView({ title, icon, children }) {
       <h5 className="text-zinc-400 text-sm font-medium mb-4 flex items-center gap-2">
         {icon} {title}
       </h5>
-      <ul className="space-y-2">
-        {lines.map((line, idx) => {
-          // HEURISTIC: Check if line starts with a common bullet char
-          const cleanLine = line.trim();
-          const isBullet = cleanLine.startsWith('•') || cleanLine.startsWith('-') || cleanLine.startsWith('*');
-          
-          return (
-            <li key={idx} className={`text-zinc-300 text-sm leading-relaxed flex gap-2 ${isBullet ? 'pl-2' : ''}`}>
-              {!isBullet && <span className="text-zinc-600 block mt-1.5 w-1.5 h-1.5 rounded-full bg-zinc-600 flex-shrink-0" />}
-              <span>{cleanLine}</span>
-            </li>
-          )
-        })}
-      </ul>
+      {isString ? (
+        <ul className="space-y-2">
+            {lines.map((line, idx) => {
+            // HEURISTIC: Check if line starts with a common bullet char
+            const cleanLine = line.trim();
+            const isBullet = cleanLine.startsWith('•') || cleanLine.startsWith('-') || cleanLine.startsWith('*');
+            
+            return (
+                <li key={idx} className={`text-zinc-300 text-sm leading-relaxed flex gap-2 ${isBullet ? 'pl-2' : ''}`}>
+                {!isBullet && <span className="text-zinc-600 block mt-1.5 w-1.5 h-1.5 rounded-full bg-zinc-600 flex-shrink-0" />}
+                <span>{cleanLine}</span>
+                </li>
+            )
+            })}
+        </ul>
+      ) : (
+        <div>{children}</div>
+      )}
     </div>
   );
 }
