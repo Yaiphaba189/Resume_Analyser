@@ -11,6 +11,46 @@ import re
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def repair_malformed_text(text: str) -> str:
+    """
+    Detects and repairs text where every character is separated by a space.
+    e.g. "H e l l o  W o r l d" -> "Hello World"
+    """
+    if not text:
+        return text
+
+    # Simple heuristic: Split by space. If > 40% of tokens are single chars, it's malformed.
+    tokens = text.split()
+    if not tokens:
+        return text
+        
+    single_char_count = sum(1 for t in tokens if len(t) == 1)
+    ratio = single_char_count / len(tokens)
+    
+    if ratio > 0.40:
+        logger.info(f"Detected malformed text (single-char ratio: {ratio:.2f}). repairing...")
+        # Strategy:
+        # 1. Replace double spaces (real word breaks in this format) with a placeholder
+        # 2. Remove single spaces (merging chars)
+        # 3. Restore placeholder as single space
+        
+        # Note: We must be careful not to break normal text if mixed.
+        # But usually the whole PDF or whole section is like this.
+        
+        # Replace 2+ spaces with placeholder
+        temp_text = re.sub(r'\s{2,}', ' <_WB_> ', text)
+        
+        # Remove single spaces
+        temp_text = temp_text.replace(' ', '')
+        
+        # Restore word breaks
+        repaired_text = temp_text.replace('<_WB_>', ' ')
+        
+        return repaired_text
+        
+    return text
+
+
 # Initialize EasyOCR
 try:
     import easyocr
@@ -27,9 +67,23 @@ def extract_text_pypdf(file_bytes: bytes) -> str:
     try:
         reader = pypdf.PdfReader(io.BytesIO(file_bytes))
         for page in reader.pages:
-            extracted = page.extract_text()
+            # 1. Try layout mode first (preserves visual structure)
+            try:
+                extracted = page.extract_text(extraction_mode="layout")
+            except Exception as e:
+                logger.warning(f"pypdf layout mode failed: {e}. Falling back to default.")
+                extracted = None
+            
+            # 2. Fallback to default mode
+            if not extracted:
+                 try:
+                     extracted = page.extract_text()
+                 except Exception:
+                     pass # Will be handled by outer/OCR fallback if total text is empty
+            
             if extracted:
                 text += extracted + "\n"
+                
     except Exception as e:
         logger.error(f"pypdf extraction failed: {e}")
     return text.strip()
@@ -89,6 +143,10 @@ def extract_text_from_file(file_path: str = None, file_bytes: bytes = None, ext:
          # For now, we return what we found.
          pass
              
+    
+    # Repair potentially malformed text (spaced characters)
+    text = repair_malformed_text(text)
+    
     return text
 
 # --- Structured Parsing Logic (Regex/Heuristic) ---

@@ -191,6 +191,7 @@ async def parse_resume_endpoint(file: UploadFile = File(...)):
     
     return {
         "filename": filename,
-        "parsed_data": parsed_data
+        "parsed_data": parsed_data,
+        "extracted_text_debug": text
     }
 

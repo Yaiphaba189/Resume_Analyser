@@ -26,51 +26,65 @@ def extract_email(text):
 
 def extract_phone(text):
     """Refined phone extraction."""
-    # Matches various formats, prevents dates/ISO strings from matching
-    # (123) 456-7890, 123-456-7890, +1 123 456 7890, 123 456 7890
-    phone_pattern = r'(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}'
+    # Matches various formats:
+    # (123) 456-7890, 123-456-7890, +1 123 456 7890
+    # Also matches India style: +91 70059 66997 (5 space 5) or 10 digit continuous
+    phone_pattern = r'(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|(\+?\d{1,3}[-.\s]?)?\d{5}[-.\s]?\d{5}'
     match = re.search(phone_pattern, text)
     return match.group(0) if match else None
 
 def extract_name(text):
-    """Extract name using Spacy NER with filtering and robust fallbacks."""
-    # Limit text processing
+    """
+    Extract name. 
+    Priority 1: Heuristic check for All-Caps header line (common in resumes).
+    Priority 2: Spacy NER 'PERSON' entity.
+    Priority 3: Heuristic check for Title-Case header line.
+    """
+    
+    # Common headers & exclusions
+    exclude_list = [
+        "resume", "curriculum", "vitae", "summary", "profile", "contact", 
+        "experience", "work experience", "education", "skills", "projects",
+        "certifications", "languages", "interests", "hobbies", "declaration",
+        "software engineer", "developer", "consultant", "analyst",
+        "phone", "email", "address", "mobile", "date of birth", "dob",
+        "gender", "nationality", "marital status", "languages known"
+    ]
+
+    # Helper to validate a candidate line/string
+    def is_valid_name(s):
+        s = s.strip()
+        clean = s.replace(" ", "").replace("-", "").replace(".", "")
+        if not (3 < len(s) < 50): return False
+        if not clean.isalpha(): return False
+        if not (1 < len(s.split()) <= 4): return False
+        if "," in s: return False # addresses often have commas
+        if s.lower() in exclude_list: return False
+        # Check against exclude keywords
+        if any(ex in s.lower() for ex in exclude_list): return False
+        return True
+
+    lines = [l.strip() for l in text.split('\n') if l.strip()]
+
+    # 1. Priority: All Caps Line at the top
+    for i in range(min(50, len(lines))): 
+        line = lines[i]
+        if line.isupper() and is_valid_name(line):
+            return line
+
+    # 2. Priority: Spacy NER
     doc = nlp(text[:2000]) 
     for ent in doc.ents:
         if ent.label_ == "PERSON":
             name = ent.text.strip()
-            # Basic validation
-            # 1. 2-3 words (First Last, First Middle Last)
-            # 2. No numbers (allow special chars like - or .)
-            # 3. Not a common tech word
-            clean_name = name.replace(" ", "").replace("-", "").replace(".", "")
-            if 1 < len(name.split()) <= 4 and clean_name.isalpha():
-                lower_name = name.lower()
-                # Expanded exclude list
-                exclude_list = [
-                    "java", "python", "resume", "curriculum", "vitae", "summary", 
-                    "profile", "contact", "experience", "software engineer", "developer",
-                    "email", "phone", "address", "education", "skills", "projects"
-                ]
-                if lower_name not in exclude_list:
-                    return name
-    
-    # Fallback: Look at the first few non-empty lines
-    lines = [l.strip() for l in text.split('\n') if l.strip()]
-    for i in range(min(5, len(lines))): # Check first 5 lines
+            if is_valid_name(name):
+                return name
+                
+    # 3. Priority: Title Case Line at the top (Fallback)
+    for i in range(min(10, len(lines))): 
         line = lines[i]
-        # Heuristic: 2-4 words, mostly letters
-        # Allow some extra flexibility but ensure it's not a common header
-        clean_line = line.replace(" ", "").replace("-", "").replace(".", "")
-        if 1 < len(line.split()) <= 4 and clean_line.isalpha():
-            lower_line = line.lower()
-            exclude_list = [
-                "java", "python", "resume", "curriculum", "vitae", "summary", 
-                "profile", "contact", "experience", "software engineer", "developer",
-                "email", "phone", "address", "education", "skills", "projects"
-            ]
-            if lower_line not in exclude_list:
-                return line
+        if line.istitle() and is_valid_name(line):
+             return line
              
     return None
 
