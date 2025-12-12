@@ -12,32 +12,32 @@ This diagram explains how the model learns from the dataset (`train_model.py`).
 
 ```mermaid
 graph TD
-    A[Start: dataset.csv] --> B{Preprocessing}
-    B --> C[Normalize Text]
-    C --> D[Tokenization]
-    D --> E[Padding (Max Len 500)]
-    E --> F[Label Encoding]
+    A["Start: dataset.csv"] --> B{"Preprocessing"}
+    B --> C["Normalize Text"]
+    C --> D["Tokenization"]
+    D --> E["Padding (Max Len 500)"]
+    E --> F["Label Encoding"]
 
-    F --> G[Split Data]
-    G --> H[Train Set]
-    G --> I[Validation Set]
+    F --> G["Split Data"]
+    G --> H["Train Set"]
+    G --> I["Validation Set"]
 
-    H --> J[TextCNN Model]
+    H --> J["TextCNN Model"]
     I --> J
 
     subgraph "TextCNN Architecture"
-        K[Embedding Layer] --> L[Conv1D (Kernels 3,4,5)]
-        L --> M[Global Max Pooling]
-        M --> N[Concatenate]
-        N --> O[Dense + Dropout]
-        O --> P[Softmax Output]
+        K["Embedding Layer"] --> L["Conv1D (Kernels 3,4,5)"]
+        L --> M["Global Max Pooling"]
+        M --> N["Concatenate"]
+        N --> O["Dense + Dropout"]
+        O --> P["Softmax Output"]
     end
 
     J --> K
-    P --> Q[Save Artifacts]
-    Q --> R[best_model.keras]
-    Q --> S[tokenizer.json]
-    Q --> T[label_encoder.json]
+    P --> Q["Save Artifacts"]
+    Q --> R["best_model.keras"]
+    Q --> S["tokenizer.json"]
+    Q --> T["label_encoder.json"]
 ```
 
 ### 2.2. Inference (Prediction) Workflow
@@ -46,20 +46,20 @@ This diagram explains how the system processes a new resume to predict its role.
 
 ```mermaid
 graph TD
-    A[User Uploads PDF] --> B[Resume Parser Service]
-    B --> C{Extract Text}
-    C -->|PDF Text| D[Clean & Normalize]
-    C -->|Image| E[OCR Processing] --> D
+    A["User Uploads PDF"] --> B["Resume Parser Service"]
+    B --> C{"Extract Text"}
+    C -->|PDF Text| D["Clean & Normalize"]
+    C -->|Image| E["OCR Processing"] --> D
 
-    D --> F[Load Artifacts]
-    F --> G[Tokenizer]
-    F --> H[Trained Model]
+    D --> F["Load Artifacts"]
+    F --> G["Tokenizer"]
+    F --> H["Trained Model"]
 
-    D --> I[Tokenize & Pad Sequence]
-    I --> J[Model Prediction]
-    J --> K[Confidence Scores]
-    K --> L[Top-3 Roles]
-    L --> M[Display to User]
+    D --> I["Tokenize & Pad Sequence"]
+    I --> J["Model Prediction"]
+    J --> K["Confidence Scores"]
+    K --> L["Top-3 Roles"]
+    L --> M["Display to User"]
 ```
 
 ````
@@ -72,7 +72,7 @@ High-level interaction between the User and the System.
 
 ```mermaid
 graph LR
-    User[User/Recruiter] -- Uploads Resume (PDF/Image) --> System(Resume Analyzer System)
+    User["User/Recruiter"] -- Uploads Resume (PDF/Image) --> System("Resume Analyzer System")
     User -- Provides Job Description --> System
     System -- Returns Analysis/Score --> User
     System -- Returns Job Role Prediction --> User
