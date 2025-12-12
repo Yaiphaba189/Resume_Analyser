@@ -12,7 +12,7 @@ This diagram explains how the model learns from the dataset (`train_model.py`).
 
 ```mermaid
 graph TD
-    A["Start: dataset.csv"] --> B{"Preprocessing"}
+    A["Start: dataset.csv"] --> B["Preprocessing"]
     B --> C["Normalize Text"]
     C --> D["Tokenization"]
     D --> E["Padding (Max Len 500)"]
@@ -47,9 +47,10 @@ This diagram explains how the system processes a new resume to predict its role.
 ```mermaid
 graph TD
     A["User Uploads PDF"] --> B["Resume Parser Service"]
-    B --> C{"Extract Text"}
-    C -->|PDF Text| D["Clean & Normalize"]
-    C -->|Image| E["OCR Processing"] --> D
+    B --> C["Extract Text"]
+    C -- "PDF Text" --> D["Clean & Normalize"]
+    C -- "Image" --> E["OCR Processing"]
+    E --> D
 
     D --> F["Load Artifacts"]
     F --> G["Tokenizer"]
@@ -72,10 +73,10 @@ High-level interaction between the User and the System.
 
 ```mermaid
 graph LR
-    User["User/Recruiter"] -- Uploads Resume (PDF/Image) --> System("Resume Analyzer System")
-    User -- Provides Job Description --> System
-    System -- Returns Analysis/Score --> User
-    System -- Returns Job Role Prediction --> User
+    User["User/Recruiter"] -- "Uploads Resume" --> System["Resume Analyzer System"]
+    User -- "Provides Job Description" --> System
+    System -- "Returns Analysis/Score" --> User
+    System -- "Returns Job Role Prediction" --> User
 ````
 
 ### 3.2. Level 1 DFD (Detailed Data Flow)
@@ -84,22 +85,22 @@ Detailed flow of data through internal processes.
 
 ```mermaid
 graph TD
-    User[User] -->|Uploads File| Frontend["Frontend UI"]
-    Frontend -->|Sends File| API["Backend API (FastAPI)"]
+    User["User"] -- "Uploads File" --> Frontend["Frontend UI"]
+    Frontend -- "Sends File" --> API["Backend API (FastAPI)"]
 
-    API -->|Raw File| Parser["Resume Parser Service"]
+    API -- "Raw File" --> Parser["Resume Parser Service"]
 
     subgraph "Data Processing"
-        Parser -->|Extracts Text| TextProc["Text Preprocessor"]
-        TextProc -->|Clean Text| Model["AI Model (TextCNN)"]
-        TextProc -->|Keyword Data| ATS["ATS Engine"]
+        Parser -- "Extracts Text" --> TextProc["Text Preprocessor"]
+        TextProc -- "Clean Text" --> Model["AI Model (TextCNN)"]
+        TextProc -- "Keyword Data" --> ATS["ATS Engine"]
     end
 
-    Model -->|Returns Role| API
-    ATS -->|Returns Score| API
+    Model -- "Returns Role" --> API
+    ATS -- "Returns Score" --> API
 
-    API -->|JSON Response| Frontend
-    Frontend -->|Visual Reports| User
+    API -- "JSON Response" --> Frontend
+    Frontend -- "Visual Reports" --> User
 ```
 
 ## 4. Machine Learning Model Report
