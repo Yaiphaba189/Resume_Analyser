@@ -84,15 +84,15 @@ Detailed flow of data through internal processes.
 
 ```mermaid
 graph TD
-    User[User] -->|Uploads File| Frontend[Frontend UI]
-    Frontend -->|Sends File| API[Backend API (FastAPI)]
+    User[User] -->|Uploads File| Frontend["Frontend UI"]
+    Frontend -->|Sends File| API["Backend API (FastAPI)"]
 
-    API -->|Raw File| Parser[Resume Parser Service]
+    API -->|Raw File| Parser["Resume Parser Service"]
 
     subgraph "Data Processing"
-        Parser -->|Extracts Text| TextProc[Text Preprocessor]
-        TextProc -->|Clean Text| Model[AI Model (TextCNN)]
-        TextProc -->|Keyword Data| ATS[ATS Engine]
+        Parser -->|Extracts Text| TextProc["Text Preprocessor"]
+        TextProc -->|Clean Text| Model["AI Model (TextCNN)"]
+        TextProc -->|Keyword Data| ATS["ATS Engine"]
     end
 
     Model -->|Returns Role| API
